@@ -1,0 +1,76 @@
+Import javax.swing.*;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
+// Enum para simular tipos de pacientes
+enum TipoPaciente {
+    GENERAL, URGENCIA, PEDIATRIA, GINECOLOGIA
+}
+
+// Clase Medico implementando Runnable
+class Medico implements Runnable {
+    private String nombre;
+    private AtomicInteger pacientesAtendidos;
+
+    public Medico(String nombre) {
+        this.nombre = nombre;
+        this.pacientesAtendidos = new AtomicInteger(0);
+    }
+
+    @Override
+    public void run() {
+        Random random = new Random();
+        while (true) { // Simulación de atención continua
+            try {
+                int tiempoAtencion = random.nextInt(5000); // Simulamos el tiempo de atención
+                Thread.sleep(tiempoAtencion);
+                
+                pacientesAtendidos.incrementAndGet();
+                System.out.println(nombre + " atendió a un paciente. Total: " + pacientesAtendidos.get());
+            } catch (InterruptedException e) {
+                System.out.println(nombre + " dejó de atender.");
+                break;
+            }
+        }
+    }
+
+    public int getPacientesAtendidos() {
+        return pacientesAtendidos.get();
+    }
+}
+
+// Clase principal para manejar la simulación
+public class Hospital {
+    public static void main(String[] args) {
+        String[] opciones = {"Iniciar Simulación", "Ver Resultados", "Salir"};
+        Medico medico1 = new Medico("Dr. Pérez");
+        Medico medico2 = new Medico("Dra. García");
+
+        Thread hilo1 = new Thread(medico1);
+        Thread hilo2 = new Thread(medico2);
+        
+        boolean ejecutando = true;
+        while (ejecutando) {
+            int seleccion = JOptionPane.showOptionDialog(null, "Menú Principal", "Hospital", 
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[0]);
+
+            switch (seleccion) {
+                case 0: // Iniciar simulación
+                    if (!hilo1.isAlive() && !hilo2.isAlive()) {
+                        hilo1.start();
+                        hilo2.start();
+                    }
+                    break;
+                case 1: // Ver resultados
+                    JOptionPane.showMessageDialog(null, "Dr. Pérez atendió: " + medico1.getPacientesAtendidos() + 
+                        "\nDra. García atendió: " + medico2.getPacientesAtendidos());
+                    break;
+                case 2: // Salir
+                    hilo1.interrupt();
+                    hilo2.interrupt();
+                    ejecutando = false;
+                    break;
+            }
+        }
+    }
+}
